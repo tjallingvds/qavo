@@ -11,7 +11,29 @@ import {
   ChevronRightIcon,
   UserIcon,
   PanelLeft,
+  BotIcon,
+  StickyNoteIcon,
 } from "lucide-react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { restrictToParentElement } from '@dnd-kit/modifiers';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import { NavUser } from "@/components/nav-user"
 import {
@@ -32,35 +54,122 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 
+interface PersonalWorkItem {
+  id: string;
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  isActive?: boolean;
+  pageId: string;
+}
+
+// Sortable Icon Component
+interface SortableIconProps {
+  item: PersonalWorkItem;
+  onPageChange: (pageId: string) => void;
+  currentPage: string;
+}
+
+function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ 
+    id: item.id,
+    transition: {
+      duration: 150,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? 'none' : transition,
+  };
+
+  const isActive = currentPage === item.pageId;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={() => onPageChange(item.pageId)}
+      className={`
+        relative flex items-center justify-center rounded-lg cursor-grab active:cursor-grabbing
+        transition-all duration-200 hover:scale-[1.02] border-2 aspect-square
+        bg-sidebar-border/50 text-sidebar-foreground/90 hover:bg-sidebar-border/70
+        w-full h-auto
+        ${isActive 
+          ? 'border-sidebar-accent text-sidebar-accent-foreground bg-sidebar-border/60' 
+          : 'border-transparent hover:border-sidebar-border/30'
+        }
+        ${isDragging ? 'opacity-50 z-50' : ''}
+      `}
+      title={item.title}
+    >
+      <item.icon className="h-5 w-5 stroke-[1.5]" />
+    </div>
+  );
+}
+
+const initialPersonalWork: PersonalWorkItem[] = [
+  {
+    id: '1',
+    title: "Dashboard",
+    url: "#",
+    icon: LayoutDashboardIcon,
+    pageId: "dashboard",
+  },
+  {
+    id: '2',
+    title: "Workspaces",
+    url: "#",
+    icon: FolderIcon,
+    pageId: "workspaces",
+  },
+  {
+    id: '3',
+    title: "Chat",
+    url: "#",
+    icon: MessageCircleIcon,
+    isActive: true,
+    pageId: "chat",
+  },
+  {
+    id: '4',
+    title: "Email",
+    url: "#",
+    icon: MailIcon,
+    pageId: "email",
+  },
+  {
+    id: '5',
+    title: "AI Agents",
+    url: "#",
+    icon: BotIcon,
+    pageId: "ai-agents",
+  },
+  {
+    id: '6',
+    title: "Notes",
+    url: "#",
+    icon: StickyNoteIcon,
+    pageId: "notes",
+  },
+];
+
 const data = {
   user: {
     name: "Tjalling",
     email: "tjalling@abcsolutions.com",
     avatar: "/avatars/tjalling.jpg",
   },
-  personalWork: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: "Workspaces",
-      url: "#",
-      icon: FolderIcon,
-    },
-    {
-      title: "Chat",
-      url: "#",
-      icon: MessageCircleIcon,
-      isActive: true,
-    },
-    {
-      title: "Email",
-      url: "#",
-      icon: MailIcon,
-    },
-  ],
   teamRooms: [
     {
       name: "Water Cooler",
@@ -91,13 +200,36 @@ const data = {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onTogglePin: () => void;
   isPinned: boolean;
+  currentPage: string;
+  onPageChange: (pageId: string) => void;
 }
 
-export function AppSidebar({ onTogglePin, isPinned, ...props }: AppSidebarProps) {
+export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, ...props }: AppSidebarProps) {
+  const [personalWork, setPersonalWork] = React.useState<PersonalWorkItem[]>(initialPersonalWork);
   const [openRooms, setOpenRooms] = React.useState<{ [key: string]: boolean }>({
     "Water Cooler": false,
     "Cool People Corner": false,
   })
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setPersonalWork((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const toggleRoom = (roomName: string) => {
     setOpenRooms(prev => ({
@@ -128,30 +260,52 @@ export function AppSidebar({ onTogglePin, isPinned, ...props }: AppSidebarProps)
       </SidebarHeader>
       
       <SidebarContent className="px-3">
-        {/* Arc-style Icon Row */}
+        {/* Draggable Icon Grid */}
         <SidebarGroup>
           <SidebarGroupContent>
-            <div className="grid grid-cols-2 gap-2">
-              {data.personalWork.map((item) => (
-                <a
-                  key={item.title}
-                  href={item.url}
-                  className={`
-                    relative flex flex-col items-center justify-center rounded-lg p-2
-                    transition-all duration-200 hover:scale-[1.02] border-2
-                    bg-sidebar-border/50 text-sidebar-foreground/90 hover:bg-sidebar-border/70
-                    ${item.isActive 
-                      ? 'border-sidebar-accent text-sidebar-accent-foreground bg-sidebar-border/60' 
-                      : 'border-transparent hover:border-sidebar-border/30'
-                    }
-                  `}
-                  title={item.title}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+              modifiers={[restrictToParentElement]}
+            >
+              <SortableContext
+                items={personalWork.map(item => item.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-3 gap-2">
+                  {personalWork.map((item) => (
+                    <SortableIcon 
+                      key={item.id} 
+                      item={item} 
+                      onPageChange={onPageChange}
+                      currentPage={currentPage}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Browser Button */}
+        <SidebarGroup className="mt-4">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  asChild 
+                  className={`w-full justify-start px-3 py-2 ${
+                    currentPage === 'browser' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                  }`}
                 >
-                  <item.icon className="h-4 w-4 mb-1.5 stroke-[1.5]" />
-                  <span className="text-[10px] font-semibold text-center leading-tight">{item.title}</span>
-                </a>
-              ))}
-            </div>
+                  <button onClick={() => onPageChange('browser')} className="flex items-center gap-3">
+                    <Building2Icon className="h-4 w-4" />
+                    <span className="font-medium">Browser</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 

@@ -1,3 +1,4 @@
+import React from 'react'
 import { AppSidebar } from "@/components/app-sidebar"
 import Browser, { BrowserRef } from './components/Browser'
 import {
@@ -8,13 +9,101 @@ import {
 import './App.css'
 import { useRef, useState, useEffect } from 'react'
 
+// Page Components
+function DashboardPage() {
+  return (
+    <div className="flex flex-1 items-center justify-center h-full">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Dashboard</h1>
+        <p className="text-gray-600">Dashboard content will go here</p>
+      </div>
+    </div>
+  );
+}
+
+function WorkspacesPage() {
+  return (
+    <div className="flex flex-1 items-center justify-center h-full">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Workspaces</h1>
+        <p className="text-gray-600">Workspaces content will go here</p>
+      </div>
+    </div>
+  );
+}
+
+function ChatPage() {
+  return (
+    <div className="flex flex-1 items-center justify-center h-full">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Chat</h1>
+        <p className="text-gray-600">Chat content will go here</p>
+      </div>
+    </div>
+  );
+}
+
+function EmailPage() {
+  return (
+    <div className="flex flex-1 items-center justify-center h-full">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Email</h1>
+        <p className="text-gray-600">Email content will go here</p>
+      </div>
+    </div>
+  );
+}
+
+function AIAgentsPage() {
+  return (
+    <div className="flex flex-1 items-center justify-center h-full">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">AI Agents</h1>
+        <p className="text-gray-600">AI Agents content will go here</p>
+      </div>
+    </div>
+  );
+}
+
+function NotesPage() {
+  return (
+    <div className="flex flex-1 items-center justify-center h-full">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Notes</h1>
+        <p className="text-gray-600">Notes content will go here</p>
+      </div>
+    </div>
+  );
+}
+
+export type PageType = 'dashboard' | 'workspaces' | 'chat' | 'email' | 'ai-agents' | 'notes' | 'browser';
+
 function AppContent() {
   const browserRef = useRef<BrowserRef>(null);
   const { setOpen, open } = useSidebar();
   const [isPinned, setIsPinned] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [hoverDisabled, setHoverDisabled] = useState(false);
+  const [currentPage, setCurrentPage] = useState<PageType>('chat');
   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Listen for browser reload message from main process
+  useEffect(() => {
+    const handleBrowserReload = () => {
+      if (browserRef.current && currentPage === 'browser') {
+        browserRef.current.reload();
+      }
+    };
+
+    // Check if we're in an Electron environment
+    if (window.ipcRenderer) {
+      window.ipcRenderer.on('browser-reload', handleBrowserReload);
+
+      return () => {
+        window.ipcRenderer.off('browser-reload', handleBrowserReload);
+      };
+    }
+  }, [currentPage]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -83,13 +172,39 @@ function AppContent() {
     }
   };
 
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <DashboardPage />;
+      case 'workspaces':
+        return <WorkspacesPage />;
+      case 'chat':
+        return <ChatPage />;
+      case 'email':
+        return <EmailPage />;
+      case 'ai-agents':
+        return <AIAgentsPage />;
+      case 'notes':
+        return <NotesPage />;
+      case 'browser':
+        return <Browser ref={browserRef} />;
+      default:
+        return <ChatPage />;
+    }
+  };
+
   return (
     <>
-      <AppSidebar onTogglePin={handleTogglePin} isPinned={isPinned} />
+      <AppSidebar 
+        onTogglePin={handleTogglePin} 
+        isPinned={isPinned} 
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
       <SidebarInset className="border-l-0">
         <div className="flex flex-1 flex-col gap-2 p-2 bg-background">
           <div className="min-h-[100vh] flex-1 rounded-xl bg-white shadow-sm border md:min-h-min">
-            <Browser ref={browserRef} />
+            {renderCurrentPage()}
           </div>
         </div>
       </SidebarInset>
