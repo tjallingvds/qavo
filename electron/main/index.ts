@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, globalShortcut } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -80,6 +80,14 @@ async function createWindow() {
     return { action: 'deny' }
   })
 
+  // Register Command+R shortcut
+  globalShortcut.register('CommandOrControl+R', () => {
+    if (win && win.isFocused()) {
+      // Send message to renderer to handle the refresh
+      win.webContents.send('handle-refresh')
+    }
+  })
+
   // Auto update
   update(win)
 }
@@ -90,6 +98,8 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   win = null
+  // Unregister all shortcuts
+  globalShortcut.unregisterAll()
   if (process.platform !== 'darwin') app.quit()
 })
 

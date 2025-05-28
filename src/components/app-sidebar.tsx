@@ -93,15 +93,21 @@ function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
 
   const isActive = currentPage === item.pageId;
 
+  const handleClick = (e: React.MouseEvent) => {
+    // Only handle click if not dragging
+    if (!isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      onPageChange(item.pageId);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      onClick={() => onPageChange(item.pageId)}
       className={`
-        relative flex items-center justify-center rounded-lg cursor-grab active:cursor-grabbing
+        relative flex items-center justify-center rounded-lg cursor-pointer
         transition-all duration-200 hover:scale-[1.02] border-2 aspect-square
         bg-sidebar-border/50 text-sidebar-foreground/90 hover:bg-sidebar-border/70
         w-full h-auto
@@ -112,8 +118,16 @@ function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
         ${isDragging ? 'opacity-50 z-50' : ''}
       `}
       title={item.title}
+      onClick={handleClick}
     >
-      <item.icon className="h-5 w-5 stroke-[1.5]" />
+      <item.icon className="h-5 w-5 stroke-[1.5] pointer-events-none" />
+      {/* Drag handle - small area for dragging */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-0 right-0 w-3 h-3 cursor-grab active:cursor-grabbing"
+        title="Drag to reorder"
+      />
     </div>
   );
 }

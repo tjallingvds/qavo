@@ -95,12 +95,22 @@ function AppContent() {
       }
     };
 
+    const handleRefresh = () => {
+      if (currentPage === 'browser' && browserRef.current) {
+        // Only reload if on browser page
+        browserRef.current.reload();
+      }
+      // Do nothing if not on browser page - Command+R is disabled
+    };
+
     // Check if we're in an Electron environment
     if (window.ipcRenderer) {
       window.ipcRenderer.on('browser-reload', handleBrowserReload);
+      window.ipcRenderer.on('handle-refresh', handleRefresh);
 
       return () => {
         window.ipcRenderer.off('browser-reload', handleBrowserReload);
+        window.ipcRenderer.off('handle-refresh', handleRefresh);
       };
     }
   }, [currentPage]);
