@@ -9,6 +9,26 @@ import {
   Globe
 } from 'lucide-react';
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Tab {
   id: string;
@@ -35,6 +55,73 @@ interface WebviewElement extends HTMLElement {
   _cleanup?: () => void;
 }
 
+// Sortable Tab Component
+interface SortableTabProps {
+  tab: Tab;
+  isActive: boolean;
+  onTabClick: (tabId: string) => void;
+  onTabClose: (tabId: string) => void;
+  canClose: boolean;
+}
+
+function SortableTab({ tab, isActive, onTabClick, onTabClose, canClose }: SortableTabProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ 
+    id: tab.id,
+    transition: {
+      duration: 150,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? 'none' : transition,
+    borderTopLeftRadius: '12px',
+    borderTopRightRadius: '12px',
+    marginRight: '-1px',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`relative flex items-center px-4 py-2 cursor-pointer min-w-0 max-w-sm transition-all duration-200 ${
+        isActive 
+          ? 'bg-white z-10' 
+          : 'bg-gray-100 hover:bg-gray-200'
+      } ${isDragging ? 'opacity-50 z-50' : ''}`}
+      onClick={() => onTabClick(tab.id)}
+    >
+      <Globe className="w-4 h-4 mr-2 flex-shrink-0 text-gray-500" />
+      <span className={`truncate text-sm font-medium ${
+        isActive ? 'text-gray-900' : 'text-gray-600'
+      }`}>
+        {tab.title}
+      </span>
+      {canClose && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onTabClose(tab.id);
+          }}
+          className="ml-2 p-1 hover:bg-gray-300 rounded-full transition-colors"
+        >
+          <X className="w-3 h-3 text-gray-500" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 const Browser = forwardRef<BrowserRef>((props, ref) => {
   const [tabs, setTabs] = useState<Tab[]>([
     { id: '1', title: 'New Tab', url: 'https://www.google.com', isLoading: false }
@@ -44,7 +131,33 @@ const Browser = forwardRef<BrowserRef>((props, ref) => {
   // Store refs for all webviews
   const webviewRefs = useRef<{ [key: string]: WebviewElement }>({});
 
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const activeTab = tabs.find(tab => tab.id === activeTabId);
+
+  // Handle drag end for tab reordering
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setTabs((tabs) => {
+        const oldIndex = tabs.findIndex((tab) => tab.id === active.id);
+        const newIndex = tabs.findIndex((tab) => tab.id === over?.id);
+
+        return arrayMove(tabs, oldIndex, newIndex);
+      });
+    }
+  };
 
   useEffect(() => {
     if (activeTab) {
@@ -189,40 +302,28 @@ const Browser = forwardRef<BrowserRef>((props, ref) => {
         
         {/* Tabs container */}
         <div className="flex flex-1 overflow-hidden relative">
-          {tabs.map((tab, index) => (
-            <div
-              key={tab.id}
-              className={`relative flex items-center px-4 py-2 cursor-pointer min-w-0 max-w-sm transition-all duration-200 ${
-                tab.id === activeTabId 
-                  ? 'bg-white z-10' 
-                  : 'bg-gray-100 hover:bg-gray-200'
-              }`}
-              onClick={() => setActiveTabId(tab.id)}
-              style={{
-                borderTopLeftRadius: '12px',
-                borderTopRightRadius: '12px',
-                marginRight: '-1px',
-              }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToHorizontalAxis]}
+          >
+            <SortableContext
+              items={tabs.map(tab => tab.id)}
+              strategy={horizontalListSortingStrategy}
             >
-              <Globe className="w-4 h-4 mr-2 flex-shrink-0 text-gray-500" />
-              <span className={`truncate text-sm font-medium ${
-                tab.id === activeTabId ? 'text-gray-900' : 'text-gray-600'
-              }`}>
-                {tab.title}
-              </span>
-              {tabs.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTab(tab.id);
-                  }}
-                  className="ml-2 p-1 hover:bg-gray-300 rounded-full transition-colors"
-                >
-                  <X className="w-3 h-3 text-gray-500" />
-                </button>
-              )}
-            </div>
-          ))}
+              {tabs.map((tab, index) => (
+                <SortableTab
+                  key={tab.id}
+                  tab={tab}
+                  isActive={tab.id === activeTabId}
+                  onTabClick={(tabId) => setActiveTabId(tabId)}
+                  onTabClose={(tabId) => closeTab(tabId)}
+                  canClose={tabs.length > 1}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
           
           {/* New tab button */}
           <button
