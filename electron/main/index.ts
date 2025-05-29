@@ -40,6 +40,7 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 let win: BrowserWindow | null = null
+let currentPage: string = 'chat' // Track current page
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
@@ -80,12 +81,13 @@ async function createWindow() {
     return { action: 'deny' }
   })
 
-  // Register Command+R shortcut
+  // Register Command+R shortcut conditionally
   globalShortcut.register('CommandOrControl+R', () => {
-    if (win && win.isFocused()) {
-      // Send message to renderer to handle the refresh
+    if (win && win.isFocused() && currentPage === 'browser') {
+      // Only send message if on browser page
       win.webContents.send('handle-refresh')
     }
+    // Do nothing if not on browser page
   })
 
   // Auto update
@@ -137,4 +139,9 @@ ipcMain.handle('open-win', (_, arg) => {
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
+})
+
+// Listen for page changes from renderer
+ipcMain.on('page-changed', (_, page) => {
+  currentPage = page
 })

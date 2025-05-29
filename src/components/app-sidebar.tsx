@@ -5,14 +5,8 @@ import {
   FolderIcon,
   MessageCircleIcon,
   MailIcon,
-  BarChart3Icon,
-  UsersIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  UserIcon,
   PanelLeft,
   BotIcon,
-  StickyNoteIcon,
 } from "lucide-react"
 import {
   DndContext,
@@ -48,11 +42,6 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 
 interface PersonalWorkItem {
   id: string;
@@ -94,7 +83,7 @@ function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
   const isActive = currentPage === item.pageId;
 
   const handleClick = (e: React.MouseEvent) => {
-    // Only handle click if not dragging
+    // Only handle click if not currently dragging
     if (!isDragging) {
       e.preventDefault();
       e.stopPropagation();
@@ -119,15 +108,10 @@ function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
       `}
       title={item.title}
       onClick={handleClick}
+      {...attributes}
+      {...listeners}
     >
       <item.icon className="h-5 w-5 stroke-[1.5] pointer-events-none" />
-      {/* Drag handle - small area for dragging */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-0 right-0 w-3 h-3 cursor-grab active:cursor-grabbing"
-        title="Drag to reorder"
-      />
     </div>
   );
 }
@@ -171,10 +155,10 @@ const initialPersonalWork: PersonalWorkItem[] = [
   },
   {
     id: '6',
-    title: "Notes",
+    title: "Free Browse",
     url: "#",
-    icon: StickyNoteIcon,
-    pageId: "notes",
+    icon: Building2Icon,
+    pageId: "browser",
   },
 ];
 
@@ -184,31 +168,6 @@ const data = {
     email: "tjalling@abcsolutions.com",
     avatar: "/avatars/tjalling.jpg",
   },
-  teamRooms: [
-    {
-      name: "Water Cooler",
-      icon: UsersIcon,
-      members: [
-        { name: "Pedro", isOnline: true },
-        { name: "Zefi", isOnline: false },
-      ],
-    },
-    {
-      name: "Cool People Corner",
-      icon: UsersIcon,
-      members: [
-        { name: "Alex", isOnline: true },
-        { name: "Tjalling", isOnline: true },
-        { name: "Rick", isOnline: false },
-      ],
-    },
-  ],
-  teamMembers: [
-    { name: "Tjalling", isOnline: true },
-    { name: "Zefi", isOnline: false },
-    { name: "Rick", isOnline: false },
-    { name: "Alex", isOnline: true },
-  ],
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -220,13 +179,13 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, ...props }: AppSidebarProps) {
   const [personalWork, setPersonalWork] = React.useState<PersonalWorkItem[]>(initialPersonalWork);
-  const [openRooms, setOpenRooms] = React.useState<{ [key: string]: boolean }>({
-    "Water Cooler": false,
-    "Cool People Corner": false,
-  })
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -244,13 +203,6 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
       });
     }
   };
-
-  const toggleRoom = (roomName: string) => {
-    setOpenRooms(prev => ({
-      ...prev,
-      [roomName]: !prev[roomName]
-    }))
-  }
 
   return (
     <Sidebar collapsible="offcanvas" className="!border-r-0" {...props}>
@@ -273,7 +225,7 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="px-3">
+      <SidebarContent className="pl-4 pr-3">
         {/* Draggable Icon Grid */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -299,86 +251,6 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
                 </div>
               </SortableContext>
             </DndContext>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Browser Button */}
-        <SidebarGroup className="mt-4">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  asChild 
-                  className={`w-full justify-start px-3 py-2 ${
-                    currentPage === 'browser' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
-                  }`}
-                >
-                  <button onClick={() => onPageChange('browser')} className="flex items-center gap-3">
-                    <Building2Icon className="h-4 w-4" />
-                    <span className="font-medium">Browser</span>
-                  </button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Team Rooms Section */}
-        <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1">
-            Team Rooms
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {data.teamRooms.map((room) => (
-                <SidebarMenuItem key={room.name}>
-                  <Collapsible open={openRooms[room.name]} onOpenChange={() => toggleRoom(room.name)}>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="w-full justify-start px-3 py-2">
-                        <room.icon className="h-4 w-4" />
-                        <span className="font-bold flex-1 text-left">{room.name}</span>
-                        {openRooms[room.name] ? (
-                          <ChevronDownIcon className="h-4 w-4" />
-                        ) : (
-                          <ChevronRightIcon className="h-4 w-4" />
-                        )}
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="ml-6 mt-1 space-y-1">
-                        {room.members.map((member) => (
-                          <div key={member.name} className="flex items-center gap-2 px-3 py-1.5 text-sm">
-                            <div className={`h-2 w-2 rounded-full ${member.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                            <span className="text-muted-foreground font-medium">{member.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Team Members Section */}
-        <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider mb-1">
-            Team Members
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {data.teamMembers.map((member) => (
-                <SidebarMenuItem key={member.name}>
-                  <SidebarMenuButton asChild className="w-full justify-start px-3 py-2">
-                    <a href="#" className="flex items-center gap-3">
-                      <div className={`h-2 w-2 rounded-full ${member.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="font-medium">{member.name}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

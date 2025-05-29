@@ -1,6 +1,7 @@
 import React from 'react'
 import { AppSidebar } from "@/components/app-sidebar"
 import Browser, { BrowserRef } from './components/Browser'
+import Chat from './components/Chat'
 import {
   SidebarInset,
   SidebarProvider,
@@ -33,14 +34,7 @@ function WorkspacesPage() {
 }
 
 function ChatPage() {
-  return (
-    <div className="flex flex-1 items-center justify-center h-full">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Chat</h1>
-        <p className="text-gray-600">Chat content will go here</p>
-      </div>
-    </div>
-  );
+  return <Chat />;
 }
 
 function EmailPage() {
@@ -103,16 +97,36 @@ function AppContent() {
       // Do nothing if not on browser page - Command+R is disabled
     };
 
+    // Prevent default Command+R behavior when not on browser page
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'r') {
+        if (currentPage !== 'browser') {
+          e.preventDefault();
+          e.stopPropagation();
+          // Completely prevent refresh when not on browser page
+        }
+      }
+    };
+
     // Check if we're in an Electron environment
     if (window.ipcRenderer) {
       window.ipcRenderer.on('browser-reload', handleBrowserReload);
       window.ipcRenderer.on('handle-refresh', handleRefresh);
+      
+      // Tell main process about current page
+      window.ipcRenderer.send('page-changed', currentPage);
+    }
 
-      return () => {
+    // Add keyboard listener to prevent default Command+R
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      if (window.ipcRenderer) {
         window.ipcRenderer.off('browser-reload', handleBrowserReload);
         window.ipcRenderer.off('handle-refresh', handleRefresh);
-      };
-    }
+      }
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [currentPage]);
 
   useEffect(() => {
@@ -203,13 +217,17 @@ function AppContent() {
     }
   };
 
+  const handlePageChange = (pageId: string) => {
+    setCurrentPage(pageId as PageType);
+  };
+
   return (
     <>
       <AppSidebar 
         onTogglePin={handleTogglePin} 
         isPinned={isPinned} 
         currentPage={currentPage}
-        onPageChange={setCurrentPage}
+        onPageChange={handlePageChange}
       />
       <SidebarInset className="border-l-0">
         <div className="flex flex-1 flex-col gap-2 p-2 bg-background">
