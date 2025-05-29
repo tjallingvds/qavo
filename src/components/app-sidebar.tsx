@@ -1,14 +1,15 @@
 import * as React from "react"
 import {
-  Building2Icon,
-  LayoutDashboardIcon,
-  FolderIcon,
-  MessageCircleIcon,
-  MailIcon,
+  Monitor,
+  LayoutGrid,
+  FolderOpen,
+  MessageSquare,
+  Mail,
   PanelLeft,
-  BotIcon,
+  Bot,
   ChevronLeft,
   ChevronRight,
+  Globe,
 } from "lucide-react"
 import {
   DndContext,
@@ -99,12 +100,11 @@ function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
       style={style}
       className={`
         relative flex items-center justify-center rounded-lg cursor-pointer
-        transition-all duration-200 hover:scale-[1.02] border aspect-square
-        bg-gray-100/80 backdrop-blur-sm text-gray-600 hover:bg-gray-200/90 hover:shadow-sm
+        transition-all duration-200 hover:scale-[1.02] aspect-square
         w-full h-auto p-4
         ${isActive 
-          ? 'border-gray-400 text-gray-800 bg-gray-200/90 shadow-sm' 
-          : 'border-gray-300 hover:border-gray-400'
+          ? 'bg-accent-quaternary/30 text-dark-text shadow-sm' 
+          : 'bg-[#f5f2ef] text-[#1a1a1a] shadow-sm hover:bg-[#f0ece8] hover:shadow-md hover:text-[#1a1a1a]'
         }
         ${isDragging ? 'opacity-50 z-50 shadow-lg' : ''}
       `}
@@ -113,7 +113,7 @@ function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
       {...attributes}
       {...listeners}
     >
-      <item.icon className="h-5 w-5 stroke-[1.5] pointer-events-none" />
+      <item.icon className="h-5 w-5 stroke-[2] pointer-events-none" />
     </div>
   );
 }
@@ -123,21 +123,21 @@ const initialPersonalWork: PersonalWorkItem[] = [
     id: '1',
     title: "Dashboard",
     url: "#",
-    icon: LayoutDashboardIcon,
+    icon: LayoutGrid,
     pageId: "dashboard",
   },
   {
     id: '2',
     title: "Workspaces",
     url: "#",
-    icon: FolderIcon,
+    icon: FolderOpen,
     pageId: "workspaces",
   },
   {
     id: '3',
     title: "Chat",
     url: "#",
-    icon: MessageCircleIcon,
+    icon: MessageSquare,
     isActive: true,
     pageId: "chat",
   },
@@ -145,21 +145,21 @@ const initialPersonalWork: PersonalWorkItem[] = [
     id: '4',
     title: "Email",
     url: "#",
-    icon: MailIcon,
+    icon: Mail,
     pageId: "email",
   },
   {
     id: '5',
     title: "AI Agents",
     url: "#",
-    icon: BotIcon,
+    icon: Bot,
     pageId: "ai-agents",
   },
   {
     id: '6',
     title: "Free Browse",
     url: "#",
-    icon: Building2Icon,
+    icon: Globe,
     pageId: "browser",
   },
 ];
@@ -244,12 +244,12 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
   return (
     <Sidebar 
       collapsible="offcanvas" 
-      className="!border-r-0 [&>[data-sidebar=sidebar]]:bg-white/40 [&>[data-sidebar=sidebar]]:backdrop-blur-xl [&>[data-sidebar=sidebar]]:border-r [&>[data-sidebar=sidebar]]:border-gray-100" 
+      className="!border-r-0 mr-2" 
       {...props}
     >
       <SidebarHeader className="pt-2">
         {/* Header */}
-        <div className="px-2 py-1 border-b border-gray-50">
+        <div className="px-2 py-1">
           <div className="flex items-center justify-between">
             <button
               onClick={(e) => {
@@ -257,11 +257,11 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
                 e.stopPropagation();
                 onTogglePin();
               }}
-              className={`p-2 hover:bg-gray-50 rounded-md transition-colors ${
-                isPinned ? 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' : ''
+              className={`p-2 hover:bg-white/40 rounded-md transition-colors ${
+                isPinned ? 'hover:bg-accent-quaternary/20' : ''
               }`}
             >
-              <PanelLeft className="h-4 w-4 text-gray-400" />
+              <PanelLeft className="h-4 w-4 text-dark-text" />
               <span className="sr-only">Toggle Pin Sidebar</span>
             </button>
             
@@ -269,18 +269,18 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
               <button
                 onClick={handleGoBack}
                 disabled={!canGoBack}
-                className="p-1.5 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-1.5 hover:bg-white/40 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Previous page"
               >
-                <ChevronLeft className="h-4 w-4 text-gray-500" />
+                <ChevronLeft className="h-4 w-4 text-dark-text" />
               </button>
               <button
                 onClick={handleGoForward}
                 disabled={!canGoForward}
-                className="p-1.5 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-1.5 hover:bg-white/40 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Next page"
               >
-                <ChevronRight className="h-4 w-4 text-gray-500" />
+                <ChevronRight className="h-4 w-4 text-dark-text" />
               </button>
             </div>
           </div>
@@ -313,6 +313,49 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
                 </div>
               </SortableContext>
             </DndContext>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Active Work Section */}
+        <SidebarGroup className="mt-4">
+          <SidebarGroupLabel className="text-xs font-extrabold text-sidebar-text/70 px-2 mb-1">
+            Active Work
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="h-8 text-sm text-[#1a1a1a] hover:bg-[#f0ece8]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Client Portal Redesign</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="h-8 text-sm text-[#1a1a1a] hover:bg-[#f0ece8]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <span>Mobile App Updates</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="h-8 text-sm text-[#1a1a1a] hover:bg-[#f0ece8]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>API Documentation</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="h-8 text-sm text-[#1a1a1a] hover:bg-[#f0ece8]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span>Dashboard Analytics</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

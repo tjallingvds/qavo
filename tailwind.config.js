@@ -7,12 +7,26 @@ export default {
   ],
   theme: {
   	extend: {
+      fontFamily: {
+        'halenoir': ['Halenoir', 'Inter', 'system-ui', 'sans-serif'],
+        'sans': ['Halenoir', 'Inter', 'system-ui', 'sans-serif'],
+      },
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+        // Custom design system colors
+        'sidebar-bg': '#fbf9f7',
+        'page-bg': '#ffffff',
+        'dark-text': '#303337',
+        'sidebar-text': '#929293',
+        'accent-primary': '#c75e42',
+        'accent-secondary': '#8b6f47',
+        'accent-tertiary': '#e0a7a5',
+        'accent-quaternary': '#fac999',
+        
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

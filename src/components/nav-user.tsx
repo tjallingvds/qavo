@@ -45,23 +45,25 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-white/40 data-[state=open]:text-dark-text hover:bg-white/30 text-sidebar-text"
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
+              <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg bg-accent-primary text-white text-xs font-medium">
+                  {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate font-medium text-dark-text">{user.name}</span>
+                <span className="truncate text-xs text-sidebar-text">
                   {user.email}
                 </span>
               </div>
-              <MoreVerticalIcon className="ml-auto size-4" />
+              <MoreVerticalIcon className="ml-auto size-4 text-sidebar-text" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-page-bg border-sidebar-text/10"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -70,34 +72,36 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg bg-accent-primary text-white text-xs font-medium">
+                    {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="truncate font-medium text-dark-text">{user.name}</span>
+                  <span className="truncate text-xs text-sidebar-text">
                     {user.email}
                   </span>
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-sidebar-text/10" />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <UserCircleIcon />
+              <DropdownMenuItem className="text-dark-text hover:bg-accent-quaternary/20 focus:bg-accent-quaternary/20">
+                <UserCircleIcon className="text-sidebar-text" />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCardIcon />
+              <DropdownMenuItem className="text-dark-text hover:bg-accent-quaternary/20 focus:bg-accent-quaternary/20">
+                <CreditCardIcon className="text-sidebar-text" />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
+              <DropdownMenuItem className="text-dark-text hover:bg-accent-quaternary/20 focus:bg-accent-quaternary/20">
+                <BellIcon className="text-sidebar-text" />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOutIcon />
+            <DropdownMenuSeparator className="bg-sidebar-text/10" />
+            <DropdownMenuItem className="text-dark-text hover:bg-accent-primary/10 focus:bg-accent-primary/10">
+              <LogOutIcon className="text-accent-primary" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

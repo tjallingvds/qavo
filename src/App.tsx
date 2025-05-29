@@ -35,8 +35,8 @@ function AIAgentsPage() {
   return (
     <div className="flex flex-1 items-center justify-center h-full">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">AI Agents</h1>
-        <p className="text-gray-600">AI Agents content will go here</p>
+        <h1 className="text-2xl font-bold text-dark-text mb-2">AI Agents</h1>
+        <p className="text-sidebar-text">AI Agents content will go here</p>
       </div>
     </div>
   );
@@ -46,8 +46,8 @@ function NotesPage() {
   return (
     <div className="flex flex-1 items-center justify-center h-full">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Notes</h1>
-        <p className="text-gray-600">Notes content will go here</p>
+        <h1 className="text-2xl font-bold text-dark-text mb-2">Notes</h1>
+        <p className="text-sidebar-text">Notes content will go here</p>
       </div>
     </div>
   );
@@ -225,8 +225,8 @@ function AppContent() {
         onPageChange={handlePageChange}
       />
       <SidebarInset className="border-l-0">
-        <div className="flex flex-1 flex-col gap-2 p-2 bg-background">
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-white shadow-sm border md:min-h-min">
+        <div className="flex flex-1 flex-col gap-2 p-2 bg-sidebar-bg">
+          <div className="min-h-[100vh] flex-1 rounded-xl bg-page-bg shadow-sm border-sidebar-text/10 border md:min-h-min">
             {renderCurrentPage()}
           </div>
         </div>
