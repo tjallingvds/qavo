@@ -2,6 +2,8 @@ import React from 'react'
 import { AppSidebar } from "@/components/app-sidebar"
 import Browser, { BrowserRef } from './components/Browser'
 import Chat from './components/Chat'
+import Email from './components/Email'
+import Workspaces from './components/Workspaces'
 import {
   SidebarInset,
   SidebarProvider,
@@ -23,14 +25,7 @@ function DashboardPage() {
 }
 
 function WorkspacesPage() {
-  return (
-    <div className="flex flex-1 items-center justify-center h-full">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Workspaces</h1>
-        <p className="text-gray-600">Workspaces content will go here</p>
-      </div>
-    </div>
-  );
+  return <Workspaces />;
 }
 
 function ChatPage() {
@@ -38,14 +33,7 @@ function ChatPage() {
 }
 
 function EmailPage() {
-  return (
-    <div className="flex flex-1 items-center justify-center h-full">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Email</h1>
-        <p className="text-gray-600">Email content will go here</p>
-      </div>
-    </div>
-  );
+  return <Email />;
 }
 
 function AIAgentsPage() {
