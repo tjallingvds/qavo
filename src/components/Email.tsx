@@ -175,7 +175,7 @@ function EmailSidebar({
   return (
     <div className="w-60 bg-white/40 backdrop-blur-xl border-r border-gray-100 flex flex-col h-full rounded-l-xl">
       {/* Header */}
-      <div className="p-3 border-b border-gray-50 rounded-tl-xl">
+      <div className="px-6 py-3 border-b border-gray-50 rounded-tl-xl">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-semibold text-gray-900">Mail</h2>
           <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">

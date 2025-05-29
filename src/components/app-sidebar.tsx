@@ -7,6 +7,8 @@ import {
   MailIcon,
   PanelLeft,
   BotIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import {
   DndContext,
@@ -97,14 +99,14 @@ function SortableIcon({ item, onPageChange, currentPage }: SortableIconProps) {
       style={style}
       className={`
         relative flex items-center justify-center rounded-lg cursor-pointer
-        transition-all duration-200 hover:scale-[1.02] border-2 aspect-square
-        bg-sidebar-border/50 text-sidebar-foreground/90 hover:bg-sidebar-border/70
-        w-full h-auto
+        transition-all duration-200 hover:scale-[1.02] border aspect-square
+        bg-gray-100/80 backdrop-blur-sm text-gray-600 hover:bg-gray-200/90 hover:shadow-sm
+        w-full h-auto p-4
         ${isActive 
-          ? 'border-sidebar-accent text-sidebar-accent-foreground bg-sidebar-border/60' 
-          : 'border-transparent hover:border-sidebar-border/30'
+          ? 'border-gray-400 text-gray-800 bg-gray-200/90 shadow-sm' 
+          : 'border-gray-300 hover:border-gray-400'
         }
-        ${isDragging ? 'opacity-50 z-50' : ''}
+        ${isDragging ? 'opacity-50 z-50 shadow-lg' : ''}
       `}
       title={item.title}
       onClick={handleClick}
@@ -179,6 +181,41 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, ...props }: AppSidebarProps) {
   const [personalWork, setPersonalWork] = React.useState<PersonalWorkItem[]>(initialPersonalWork);
+  const [pageHistory, setPageHistory] = React.useState<string[]>([currentPage]);
+  const [historyIndex, setHistoryIndex] = React.useState(0);
+
+  // Update history when page changes externally
+  React.useEffect(() => {
+    if (pageHistory[historyIndex] !== currentPage) {
+      const newHistory = pageHistory.slice(0, historyIndex + 1);
+      newHistory.push(currentPage);
+      setPageHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+    }
+  }, [currentPage]);
+
+  const handlePageChange = (pageId: string) => {
+    onPageChange(pageId);
+  };
+
+  const handleGoBack = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      onPageChange(pageHistory[newIndex]);
+    }
+  };
+
+  const handleGoForward = () => {
+    if (historyIndex < pageHistory.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      onPageChange(pageHistory[newIndex]);
+    }
+  };
+
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex < pageHistory.length - 1;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -205,27 +242,52 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
   };
 
   return (
-    <Sidebar collapsible="offcanvas" className="!border-r-0" {...props}>
+    <Sidebar 
+      collapsible="offcanvas" 
+      className="!border-r-0 [&>[data-sidebar=sidebar]]:bg-white/40 [&>[data-sidebar=sidebar]]:backdrop-blur-xl [&>[data-sidebar=sidebar]]:border-r [&>[data-sidebar=sidebar]]:border-gray-100" 
+      {...props}
+    >
       <SidebarHeader className="pt-2">
-        {/* Toggle Pin Button at top left */}
-        <div className="flex items-center justify-start px-3">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onTogglePin();
-            }}
-            className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 ${
-              isPinned ? 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' : ''
-            }`}
-          >
-            <PanelLeft className="h-5 w-5" />
-            <span className="sr-only">Toggle Pin Sidebar</span>
-          </button>
+        {/* Header */}
+        <div className="px-2 py-1 border-b border-gray-50">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onTogglePin();
+              }}
+              className={`p-2 hover:bg-gray-50 rounded-md transition-colors ${
+                isPinned ? 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' : ''
+              }`}
+            >
+              <PanelLeft className="h-4 w-4 text-gray-400" />
+              <span className="sr-only">Toggle Pin Sidebar</span>
+            </button>
+            
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={handleGoBack}
+                disabled={!canGoBack}
+                className="p-1.5 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4 text-gray-500" />
+              </button>
+              <button
+                onClick={handleGoForward}
+                disabled={!canGoForward}
+                className="p-1.5 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Next page"
+              >
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              </button>
+            </div>
+          </div>
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="pl-4 pr-3">
+      <SidebarContent className="px-2 -mt-2">
         {/* Draggable Icon Grid */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -239,12 +301,12 @@ export function AppSidebar({ onTogglePin, isPinned, currentPage, onPageChange, .
                 items={personalWork.map(item => item.id)}
                 strategy={rectSortingStrategy}
               >
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-3">
                   {personalWork.map((item) => (
                     <SortableIcon 
                       key={item.id} 
                       item={item} 
-                      onPageChange={onPageChange}
+                      onPageChange={handlePageChange}
                       currentPage={currentPage}
                     />
                   ))}
