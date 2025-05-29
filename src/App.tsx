@@ -3,7 +3,9 @@ import { AppSidebar } from "@/components/app-sidebar"
 import Browser, { BrowserRef } from './components/Browser'
 import Chat from './components/Chat'
 import Email from './components/Email'
+import Dashboard from './components/Dashboard'
 import Workspaces from './components/Workspaces'
+import ResearchPages from './components/ResearchPages'
 import {
   SidebarInset,
   SidebarProvider,
@@ -14,18 +16,11 @@ import { useRef, useState, useEffect } from 'react'
 
 // Page Components
 function DashboardPage() {
-  return (
-    <div className="flex flex-1 items-center justify-center h-full">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Dashboard content will go here</p>
-      </div>
-    </div>
-  );
+  return <Dashboard />;
 }
 
-function WorkspacesPage() {
-  return <Workspaces />;
+function WorkspacesPage({ onOpenWorkspace }: { onOpenWorkspace: (workspaceId: string) => void }) {
+  return <Workspaces onOpenWorkspace={onOpenWorkspace} />;
 }
 
 function ChatPage() {
@@ -58,7 +53,11 @@ function NotesPage() {
   );
 }
 
-export type PageType = 'dashboard' | 'workspaces' | 'chat' | 'email' | 'ai-agents' | 'notes' | 'browser';
+function ResearchPagesPage({ workspaceId }: { workspaceId?: string }) {
+  return <ResearchPages workspaceId={workspaceId} />;
+}
+
+export type PageType = 'dashboard' | 'workspaces' | 'chat' | 'email' | 'ai-agents' | 'notes' | 'browser' | 'research-pages';
 
 function AppContent() {
   const browserRef = useRef<BrowserRef>(null);
@@ -67,6 +66,7 @@ function AppContent() {
   const [isHovering, setIsHovering] = useState(false);
   const [hoverDisabled, setHoverDisabled] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageType>('chat');
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | undefined>();
   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Listen for browser reload message from main process
@@ -184,12 +184,17 @@ function AppContent() {
     }
   };
 
+  const handleOpenWorkspace = (workspaceId: string) => {
+    setCurrentWorkspaceId(workspaceId);
+    setCurrentPage('research-pages');
+  };
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'dashboard':
         return <DashboardPage />;
       case 'workspaces':
-        return <WorkspacesPage />;
+        return <WorkspacesPage onOpenWorkspace={handleOpenWorkspace} />;
       case 'chat':
         return <ChatPage />;
       case 'email':
@@ -200,6 +205,8 @@ function AppContent() {
         return <NotesPage />;
       case 'browser':
         return <Browser ref={browserRef} />;
+      case 'research-pages':
+        return <ResearchPagesPage workspaceId={currentWorkspaceId} />;
       default:
         return <ChatPage />;
     }

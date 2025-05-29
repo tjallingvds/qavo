@@ -1,18 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Send, 
-  Smile, 
-  Paperclip, 
   Hash, 
   Lock, 
   Users, 
-  Search,
-  Plus,
-  Settings,
-  Phone,
-  Video,
-  MoreHorizontal,
-  ChevronDown
+  Search, 
+  Plus, 
+  MoreHorizontal, 
+  Phone, 
+  Video, 
+  Info,
+  Smile,
+  Paperclip,
+  Send,
+  ChevronDown,
+  ChevronRight,
+  Dot,
+  Pin,
+  Settings
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -33,6 +37,7 @@ interface User {
   name: string;
   avatar?: string;
   status: 'online' | 'away' | 'busy' | 'offline';
+  role?: string;
 }
 
 interface Channel {
@@ -41,6 +46,9 @@ interface Channel {
   type: 'public' | 'private' | 'dm';
   unreadCount?: number;
   members?: number;
+  isPinned?: boolean;
+  isArchived?: boolean;
+  lastActivity?: Date;
 }
 
 interface Reaction {
@@ -50,154 +58,342 @@ interface Reaction {
 }
 
 const mockUsers: User[] = [
-  { id: '1', name: 'Alice Johnson', status: 'online' },
-  { id: '2', name: 'Bob Smith', status: 'away' },
-  { id: '3', name: 'Carol Davis', status: 'online' },
-  { id: '4', name: 'David Wilson', status: 'busy' },
-  { id: '5', name: 'Emma Brown', status: 'offline' },
+  { id: '1', name: 'Alice Johnson', avatar: '/avatars/alice.jpg', status: 'online', role: 'Designer' },
+  { id: '2', name: 'Bob Smith', avatar: '/avatars/bob.jpg', status: 'online', role: 'Developer' },
+  { id: '3', name: 'Carol Davis', avatar: '/avatars/carol.jpg', status: 'away', role: 'Product Manager' },
+  { id: '4', name: 'David Wilson', avatar: '/avatars/david.jpg', status: 'online', role: 'Engineer' },
+  { id: '5', name: 'Emma Thompson', avatar: '/avatars/emma.jpg', status: 'busy', role: 'UX Researcher' },
 ];
 
 const mockChannels: Channel[] = [
-  { id: '1', name: 'general', type: 'public', unreadCount: 3, members: 12 },
-  { id: '2', name: 'development', type: 'public', unreadCount: 0, members: 8 },
-  { id: '3', name: 'design', type: 'public', unreadCount: 1, members: 5 },
-  { id: '4', name: 'project-alpha', type: 'private', unreadCount: 0, members: 4 },
-  { id: '5', name: 'random', type: 'public', unreadCount: 0, members: 15 },
+  { id: '1', name: 'general', type: 'public', unreadCount: 3, members: 12, isPinned: true, lastActivity: new Date(Date.now() - 1000 * 60 * 15) },
+  { id: '2', name: 'development', type: 'public', unreadCount: 0, members: 8, isPinned: false, lastActivity: new Date(Date.now() - 1000 * 60 * 30) },
+  { id: '3', name: 'design', type: 'public', unreadCount: 1, members: 5, isPinned: true, lastActivity: new Date(Date.now() - 1000 * 60 * 45) },
+  { id: '4', name: 'project-alpha', type: 'private', unreadCount: 0, members: 4, isPinned: false, lastActivity: new Date(Date.now() - 1000 * 60 * 60) },
+  { id: '5', name: 'random', type: 'public', unreadCount: 0, members: 15, isPinned: false, lastActivity: new Date(Date.now() - 1000 * 60 * 120) },
 ];
 
 const mockMessages: Message[] = [
   {
     id: '1',
-    user: mockUsers[0],
-    content: 'Hey everyone! Just wanted to share the latest design updates for the new feature.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
+    user: { id: '1', name: 'Alice Johnson', status: 'online', role: 'Designer' },
+    content: 'Hey everyone! Just wanted to share the latest design updates for the new feature. I\'ve incorporated all the feedback from last week\'s review.',
+    timestamp: new Date(Date.now() - 1000 * 60 * 15),
     type: 'text',
-    reactions: [{ emoji: '👍', users: ['2', '3'], count: 2 }]
+    reactions: [
+      { emoji: '👍', count: 2, users: ['2', '3'] }
+    ]
   },
   {
     id: '2',
-    user: mockUsers[1],
-    content: 'Looks great! I especially like the new color scheme. When are we planning to ship this?',
-    timestamp: new Date(Date.now() - 1000 * 60 * 25),
+    user: { id: '2', name: 'Bob Smith', status: 'online', role: 'Developer' },
+    content: 'Looks fantastic! I especially like the new color scheme and improved navigation flow. When are we planning to ship this to production?',
+    timestamp: new Date(Date.now() - 1000 * 60 * 10),
     type: 'text',
   },
   {
     id: '3',
-    user: mockUsers[2],
-    content: 'The mockups are in Figma if anyone wants to take a look. I\'ll send the link shortly.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 20),
+    user: { id: '3', name: 'Carol Davis', status: 'away', role: 'Product Manager' },
+    content: 'The mockups are in Figma if anyone wants to take a detailed look. I\'ll send the link shortly along with the interactive prototype.',
+    timestamp: new Date(Date.now() - 1000 * 60 * 5),
     type: 'text',
-    reactions: [{ emoji: '🎨', users: ['1'], count: 1 }]
+    reactions: [
+      { emoji: '👀', count: 1, users: ['4'] }
+    ]
   },
   {
     id: '4',
-    user: mockUsers[3],
-    content: 'Perfect timing! I was just about to ask for those. Thanks Carol! 🙌',
-    timestamp: new Date(Date.now() - 1000 * 60 * 15),
+    user: { id: '4', name: 'David Wilson', status: 'online', role: 'Engineer' },
+    content: 'Perfect timing! I was just about to ask for those. Thanks Carol! 🙏 This will help with the implementation planning.',
+    timestamp: new Date(Date.now() - 1000 * 60 * 1),
     type: 'text',
+    reactions: [
+      { emoji: '🙏', count: 1, users: ['3'] }
+    ]
   },
 ];
 
-function ChatSidebar({ 
-  channels, 
-  activeChannel, 
-  onChannelSelect 
-}: { 
-  channels: Channel[]; 
-  activeChannel: string; 
-  onChannelSelect: (channelId: string) => void;
-}) {
+function ChatSidebar() {
+  const [pinnedExpanded, setPinnedExpanded] = useState(true);
+  const [channelsExpanded, setChannelsExpanded] = useState(true);
+  const [dmExpanded, setDmExpanded] = useState(true);
+
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
+    <div className="w-60 bg-white/40 backdrop-blur-xl border-r border-gray-100 flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Workspace</h2>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-            <Settings className="h-4 w-4 text-gray-500" />
-          </Button>
+      <div className="p-4 border-b border-gray-50">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-medium text-gray-900">Chat</h2>
+          <div className="flex items-center space-x-1">
+            <button className="p-1.5 hover:bg-gray-50 rounded-md transition-colors">
+              <Search className="h-3.5 w-3.5 text-gray-400" />
+            </button>
+            <button className="p-1.5 hover:bg-gray-50 rounded-md transition-colors">
+              <Settings className="h-3.5 w-3.5 text-gray-400" />
+            </button>
+          </div>
         </div>
         
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input 
-            placeholder="Search channels, messages..." 
-            className="pl-9 bg-white border-gray-200 h-8 text-sm"
+          <input 
+            placeholder="Search conversations..." 
+            className="w-full pl-9 pr-3 py-2 bg-gray-50 border-0 rounded-md text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-200 transition-all"
           />
         </div>
       </div>
 
-      {/* Channels */}
+      {/* Channel Lists */}
       <div className="flex-1 overflow-y-auto">
+        {/* Pinned Section */}
         <div className="p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Channels</span>
-            <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-              <Plus className="h-3 w-3 text-gray-500" />
-            </Button>
-          </div>
+          <button 
+            onClick={() => setPinnedExpanded(!pinnedExpanded)}
+            className="flex items-center justify-between w-full p-2 hover:bg-gray-25 rounded-md transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              {pinnedExpanded ? 
+                <ChevronDown className="h-3 w-3 text-gray-400" /> : 
+                <ChevronRight className="h-3 w-3 text-gray-400" />
+              }
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Pinned</span>
+            </div>
+            <span className="text-xs text-gray-400">2</span>
+          </button>
           
-          <div className="space-y-1">
-            {channels.map((channel) => (
-              <button
-                key={channel.id}
-                onClick={() => onChannelSelect(channel.id)}
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-colors ${
-                  activeChannel === channel.id 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  {channel.type === 'private' ? (
-                    <Lock className="h-3 w-3 text-gray-400" />
-                  ) : (
-                    <Hash className="h-3 w-3 text-gray-400" />
-                  )}
-                  <span>{channel.name}</span>
-                </div>
-                {channel.unreadCount && channel.unreadCount > 0 && (
-                  <Badge variant="destructive" className="h-5 px-1.5 text-xs">
-                    {channel.unreadCount}
-                  </Badge>
-                )}
-              </button>
-            ))}
-          </div>
+          {pinnedExpanded && (
+            <div className="mt-1 space-y-0.5">
+              <ChannelItem 
+                type="channel"
+                name="general" 
+                isActive={true}
+                hasUnread={true}
+                unreadCount={3}
+                isPinned={true}
+                lastActivity="17m"
+              />
+              <ChannelItem 
+                type="channel"
+                name="design" 
+                hasUnread={true}
+                unreadCount={1}
+                isPinned={true}
+                lastActivity="47m"
+              />
+            </div>
+          )}
         </div>
 
-        {/* Direct Messages */}
-        <div className="p-3 border-t border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Direct Messages</span>
-            <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-              <Plus className="h-3 w-3 text-gray-500" />
-            </Button>
-          </div>
+        {/* Channels Section */}
+        <div className="p-3">
+          <button 
+            onClick={() => setChannelsExpanded(!channelsExpanded)}
+            className="flex items-center justify-between w-full p-2 hover:bg-gray-25 rounded-md transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              {channelsExpanded ? 
+                <ChevronDown className="h-3 w-3 text-gray-400" /> : 
+                <ChevronRight className="h-3 w-3 text-gray-400" />
+              }
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Channels</span>
+            </div>
+            <span className="text-xs text-gray-400">3</span>
+          </button>
           
-          <div className="space-y-1">
-            {mockUsers.slice(0, 4).map((user) => (
-              <button
-                key={user.id}
-                className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <div className="relative">
-                  <Avatar className="h-5 w-5">
-                    <AvatarFallback className="text-xs bg-gray-200">
-                      {user.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-white ${
-                    user.status === 'online' ? 'bg-green-400' :
-                    user.status === 'away' ? 'bg-yellow-400' :
-                    user.status === 'busy' ? 'bg-red-400' : 'bg-gray-400'
-                  }`} />
-                </div>
-                <span className="truncate">{user.name}</span>
-              </button>
-            ))}
+          {channelsExpanded && (
+            <div className="mt-1 space-y-0.5">
+              <ChannelItem 
+                type="channel"
+                name="development" 
+                lastActivity="32m"
+              />
+              <ChannelItem 
+                type="private"
+                name="project-alpha" 
+                lastActivity="1h"
+              />
+              <ChannelItem 
+                type="channel"
+                name="random" 
+                lastActivity="2h"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Direct Messages Section */}
+        <div className="p-3">
+          <button 
+            onClick={() => setDmExpanded(!dmExpanded)}
+            className="flex items-center justify-between w-full p-2 hover:bg-gray-25 rounded-md transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              {dmExpanded ? 
+                <ChevronDown className="h-3 w-3 text-gray-400" /> : 
+                <ChevronRight className="h-3 w-3 text-gray-400" />
+              }
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Direct Messages</span>
+            </div>
+            <span className="text-xs text-gray-400">4</span>
+          </button>
+          
+          {dmExpanded && (
+            <div className="mt-1 space-y-0.5">
+              <ChannelItem 
+                type="dm"
+                name="Alice Johnson" 
+                hasUnread={true}
+                unreadCount={2}
+                lastActivity="27m"
+                avatar="/avatars/alice.jpg"
+                isOnline={true}
+              />
+              <ChannelItem 
+                type="dm"
+                name="Bob Smith" 
+                hasUnread={true}
+                unreadCount={5}
+                lastActivity="1h"
+                avatar="/avatars/bob.jpg"
+                isOnline={true}
+              />
+              <ChannelItem 
+                type="dm"
+                name="Carol Davis" 
+                lastActivity="11m"
+                avatar="/avatars/carol.jpg"
+                isOnline={false}
+              />
+              <ChannelItem 
+                type="dm"
+                name="David Wilson" 
+                hasUnread={true}
+                unreadCount={2}
+                lastActivity="1h"
+                avatar="/avatars/david.jpg"
+                isOnline={true}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* New Conversation Button */}
+      <div className="p-3 border-t border-gray-50">
+        <button className="w-full bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium py-2.5 rounded-lg transition-colors">
+          New conversation
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ChannelItem({ 
+  type, 
+  name, 
+  isActive = false, 
+  hasUnread = false, 
+  unreadCount = 0, 
+  lastActivity,
+  isPinned = false,
+  avatar,
+  isOnline = false
+}: {
+  type: 'channel' | 'private' | 'dm';
+  name: string;
+  isActive?: boolean;
+  hasUnread?: boolean;
+  unreadCount?: number;
+  lastActivity?: string;
+  isPinned?: boolean;
+  avatar?: string;
+  isOnline?: boolean;
+}) {
+  const getIcon = () => {
+    if (type === 'private') return <Lock className="h-3 w-3 text-gray-400" />;
+    if (type === 'dm') return null;
+    return <Hash className="h-3 w-3 text-gray-400" />;
+  };
+
+  return (
+    <div 
+      className={`flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all group ${
+        isActive 
+          ? 'bg-gray-50 text-gray-900' 
+          : 'text-gray-600 hover:bg-gray-25 hover:text-gray-900'
+      }`}
+    >
+      <div className="flex items-center space-x-2 min-w-0 flex-1">
+        {type === 'dm' ? (
+          <div className="relative">
+            <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-medium text-gray-600">
+                {name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </span>
+            </div>
+            {isOnline && (
+              <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
+            )}
           </div>
+        ) : (
+          getIcon()
+        )}
+        <div className="flex items-center space-x-1 min-w-0 flex-1">
+          <span className={`text-sm truncate ${!hasUnread ? '' : 'font-medium'}`}>
+            {name}
+          </span>
+          {isPinned && <Pin className="h-3 w-3 text-gray-400 flex-shrink-0" />}
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-2 flex-shrink-0">
+        {hasUnread && unreadCount > 0 && (
+          <div className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] h-4 flex items-center justify-center font-medium">
+            {unreadCount}
+          </div>
+        )}
+        {lastActivity && (
+          <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+            {lastActivity}
+          </span>
+        )}
+        {hasUnread && !unreadCount && (
+          <div className="w-1.5 h-1.5 bg-gray-900 rounded-full"></div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ChatHeader() {
+  return (
+    <div className="px-6 py-4 border-b border-gray-50 bg-white">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Hash className="h-4 w-4 text-gray-500" />
+            <h1 className="text-lg font-medium text-gray-900">general</h1>
+          </div>
+          <div className="flex items-center space-x-1 text-sm text-gray-500">
+            <Users className="h-4 w-4" />
+            <span>12</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-1">
+          <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+            <Phone className="h-4 w-4 text-gray-400" />
+          </button>
+          <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+            <Video className="h-4 w-4 text-gray-400" />
+          </button>
+          <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+            <Info className="h-4 w-4 text-gray-400" />
+          </button>
+          <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+            <MoreHorizontal className="h-4 w-4 text-gray-400" />
+          </button>
         </div>
       </div>
     </div>
@@ -214,34 +410,35 @@ function MessageItem({ message }: { message: Message }) {
   };
 
   return (
-    <div className="group hover:bg-gray-50 px-4 py-2 transition-colors">
-      <div className="flex space-x-3">
-        <Avatar className="h-8 w-8 mt-0.5">
-          <AvatarFallback className="text-sm bg-gray-200">
-            {message.user.name.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
+    <div className="px-6 py-3 hover:bg-gray-25/50 transition-colors group">
+      <div className="flex items-start space-x-3">
+        <div className="flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+            <span className="text-sm font-medium text-gray-600">
+              {message.user.name.split(' ').map(n => n[0]).join('')}
+            </span>
+          </div>
+        </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline space-x-2 mb-1">
-            <span className="font-medium text-gray-900 text-sm">
-              {message.user.name}
-            </span>
-            <span className="text-xs text-gray-500">
+            <span className="text-sm font-medium text-gray-900">{message.user.name}</span>
+            <span className="text-xs text-gray-500">{message.user.role}</span>
+            <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
               {formatTime(message.timestamp)}
             </span>
           </div>
           
-          <div className="text-sm text-gray-800 leading-relaxed">
+          <div className="text-[15px] text-gray-800 leading-relaxed">
             {message.content}
           </div>
           
           {message.reactions && message.reactions.length > 0 && (
-            <div className="flex space-x-1 mt-2">
+            <div className="flex items-center space-x-1 mt-2">
               {message.reactions.map((reaction, index) => (
-                <button
+                <button 
                   key={index}
-                  className="flex items-center space-x-1 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-xs transition-colors"
+                  className="flex items-center space-x-1 px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded-full text-xs transition-colors"
                 >
                   <span>{reaction.emoji}</span>
                   <span className="text-gray-600">{reaction.count}</span>
@@ -250,178 +447,66 @@ function MessageItem({ message }: { message: Message }) {
             </div>
           )}
         </div>
-        
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-            <MoreHorizontal className="h-4 w-4 text-gray-500" />
-          </Button>
-        </div>
       </div>
     </div>
   );
 }
 
-function ChatHeader({ channel }: { channel: Channel }) {
-  return (
-    <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4">
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-2">
-          {channel.type === 'private' ? (
-            <Lock className="h-4 w-4 text-gray-500" />
-          ) : (
-            <Hash className="h-4 w-4 text-gray-500" />
-          )}
-          <h1 className="font-semibold text-gray-900">{channel.name}</h1>
-        </div>
-        
-        {channel.members && (
-          <div className="flex items-center space-x-1 text-sm text-gray-500">
-            <Users className="h-3 w-3" />
-            <span>{channel.members}</span>
-          </div>
-        )}
-      </div>
-      
-      <div className="flex items-center space-x-1">
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Phone className="h-4 w-4 text-gray-500" />
-        </Button>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Video className="h-4 w-4 text-gray-500" />
-        </Button>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Settings className="h-4 w-4 text-gray-500" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function MessageInput({ onSendMessage }: { onSendMessage: (message: string) => void }) {
+function MessageInput() {
   const [message, setMessage] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim()) {
-      onSendMessage(message.trim());
-      setMessage('');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [message]);
 
   return (
-    <div className="p-4 border-t border-gray-200">
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="flex items-end space-x-2">
-          <div className="flex-1 relative">
+    <div className="px-6 py-4 border-t border-gray-50 bg-white">
+      <div className="flex items-end space-x-3">
+        <div className="flex-1">
+          <div className="relative">
             <textarea
-              ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
               placeholder="Type a message..."
-              className="w-full px-3 py-3 pr-20 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm max-h-32"
-              rows={3}
+              className="w-full px-4 py-3 pr-12 bg-gray-50 border-0 rounded-lg text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-200 transition-all resize-none"
+              rows={1}
+              style={{ minHeight: '44px', maxHeight: '120px' }}
             />
-            
-            {/* Message input actions */}
-            <div className="absolute right-2 top-3 flex items-center space-x-1">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 w-6 p-0"
-              >
+            <div className="absolute right-2 bottom-2 flex items-center space-x-1">
+              <button className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
                 <Paperclip className="h-4 w-4 text-gray-400" />
-              </Button>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 w-6 p-0"
-              >
+              </button>
+              <button className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
                 <Smile className="h-4 w-4 text-gray-400" />
-              </Button>
+              </button>
             </div>
           </div>
-          
-          <Button 
-            type="submit" 
-            disabled={!message.trim()}
-            className="h-6 w-6 p-0 rounded-lg self-end mb-3"
-            size="sm"
-          >
-            <Send className="h-3 w-3" />
-          </Button>
         </div>
-      </form>
+        
+        <button 
+          disabled={!message.trim()}
+          className="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-200 disabled:cursor-not-allowed text-white p-3 rounded-lg transition-colors"
+        >
+          <Send className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }
 
 export default function Chat() {
-  const [activeChannel, setActiveChannel] = useState('1');
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const currentChannel = mockChannels.find(c => c.id === activeChannel) || mockChannels[0];
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      user: mockUsers[0], // Current user
-      content,
-      timestamp: new Date(),
-      type: 'text',
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-  };
-
   return (
-    <div className="flex h-full overflow-hidden">
-      <ChatSidebar 
-        channels={mockChannels}
-        activeChannel={activeChannel}
-        onChannelSelect={setActiveChannel}
-      />
+    <div className="flex h-full bg-white overflow-hidden">
+      <ChatSidebar />
       
+      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        <ChatHeader channel={currentChannel} />
+        <ChatHeader />
         
         {/* Messages */}
         <div className="flex-1 overflow-y-auto">
-          <div className="py-4">
-            {messages.map((message) => (
-              <MessageItem key={message.id} message={message} />
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+          {mockMessages.map((message) => (
+            <MessageItem key={message.id} message={message} />
+          ))}
         </div>
         
-        <MessageInput onSendMessage={handleSendMessage} />
+        <MessageInput />
       </div>
     </div>
   );

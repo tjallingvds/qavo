@@ -8,6 +8,7 @@ import {
   Flag, 
   Search,
   Plus,
+  Edit,
   Settings,
   Filter,
   MoreHorizontal,
@@ -24,7 +25,8 @@ import {
   SortAsc,
   ChevronRight,
   Mail,
-  Dot
+  Dot,
+  X
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -171,53 +173,42 @@ function EmailSidebar({
   onFolderSelect: (folderId: string) => void;
 }) {
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
+    <div className="w-60 bg-white/40 backdrop-blur-xl border-r border-gray-100 flex flex-col h-full rounded-l-xl">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Mail</h2>
-          <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <RefreshCw className="h-4 w-4 text-gray-500" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <Settings className="h-4 w-4 text-gray-500" />
-            </Button>
-          </div>
+      <div className="p-3 border-b border-gray-50 rounded-tl-xl">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-gray-900">Mail</h2>
+          <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+            <Edit className="h-4 w-4 text-gray-400" />
+          </button>
         </div>
-        
-        {/* Compose Button */}
-        <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          Compose
-        </Button>
       </div>
 
       {/* Folders */}
       <div className="flex-1 overflow-y-auto p-3">
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {folders.map((folder) => (
             <button
               key={folder.id}
               onClick={() => onFolderSelect(folder.id)}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${
                 activeFolder === folder.id 
-                  ? 'bg-blue-50 text-blue-700 font-medium' 
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-gray-50 text-gray-900' 
+                  : 'text-gray-600 hover:bg-gray-25 hover:text-gray-900'
               }`}
             >
               <div className="flex items-center space-x-3">
-                <folder.icon className="h-4 w-4 text-gray-500" />
+                <folder.icon className="h-4 w-4" />
                 <span>{folder.name}</span>
               </div>
               <div className="flex items-center space-x-2">
                 {folder.unreadCount && folder.unreadCount > 0 && (
-                  <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                  <div className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] h-4 flex items-center justify-center font-medium">
                     {folder.unreadCount}
-                  </Badge>
+                  </div>
                 )}
                 {folder.count && (
-                  <span className="text-xs text-gray-500">{folder.count}</span>
+                  <span className="text-xs text-gray-400">{folder.count}</span>
                 )}
               </div>
             </button>
@@ -228,10 +219,10 @@ function EmailSidebar({
   );
 }
 
-function EmailListItem({ email, isSelected, onClick }: { 
+function CompactEmailListItem({ email, onClick, isSelected }: { 
   email: EmailMessage; 
-  isSelected: boolean; 
   onClick: () => void;
+  isSelected?: boolean;
 }) {
   const formatTime = (date: Date) => {
     const now = new Date();
@@ -239,164 +230,149 @@ function EmailListItem({ email, isSelected, onClick }: {
     
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-      return `${diffInMinutes}m ago`;
+      return `${diffInMinutes}m`;
     } else if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
+      return `${diffInHours}h`;
     } else {
-      return date.toLocaleDateString();
+      const diffInDays = Math.floor(diffInHours / 24);
+      return diffInDays === 1 ? '1d' : `${diffInDays}d`;
     }
   };
 
   return (
     <div
       onClick={onClick}
-      className={`p-4 border-b border-gray-100 cursor-pointer transition-all duration-200 hover:bg-gray-50 ${
-        isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
-      } ${!email.isRead ? 'bg-gray-25' : ''}`}
+      className={`px-6 py-3 cursor-pointer transition-all duration-150 border-b border-gray-100 last:border-b-0 ${
+        isSelected ? 'bg-gray-50 border-l-2 border-l-gray-900' : 'hover:bg-gray-50'
+      }`}
     >
-      <div className="flex items-start space-x-3">
-        <Avatar className="h-8 w-8 mt-0.5">
-          <AvatarImage src={email.sender.avatar} />
-          <AvatarFallback className="text-xs bg-gray-200">
-            {email.sender.name.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4 flex-1 min-w-0">
+          <div className="flex-shrink-0">
+            <span className={`text-sm ${!email.isRead ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
+              {email.sender.name}
+            </span>
+          </div>
+          
+          <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
-              <span className={`text-sm ${!email.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
-                {email.sender.name}
-              </span>
-              {!email.isRead && <Dot className="h-3 w-3 text-blue-600" />}
-            </div>
-            <div className="flex items-center space-x-1">
-              {email.hasAttachment && <Paperclip className="h-3 w-3 text-gray-400" />}
-              {email.isStarred && <Star className="h-3 w-3 text-yellow-500 fill-current" />}
-              {email.isFlagged && <Flag className="h-3 w-3 text-red-500" />}
-              <span className="text-xs text-gray-500">{formatTime(email.timestamp)}</span>
+              <h4 className={`text-sm truncate ${!email.isRead ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
+                {email.subject}
+              </h4>
+              {!email.isRead && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />}
             </div>
           </div>
-          
-          <div className="mb-1">
-            <h4 className={`text-sm truncate ${!email.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
-              {email.subject}
-            </h4>
-          </div>
-          
-          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-            {email.preview}
-          </p>
+        </div>
+        
+        <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
+          {email.hasAttachment && <Paperclip className="h-3.5 w-3.5 text-gray-400" />}
+          {email.isStarred && <Star className="h-3.5 w-3.5 text-amber-500 fill-current" />}
+          <span className="text-xs text-gray-400 font-normal">{formatTime(email.timestamp)}</span>
         </div>
       </div>
     </div>
   );
 }
 
-function EmailDetail({ email }: { email: EmailMessage }) {
+function EmailDetail({ email, onBack }: { email: EmailMessage; onBack?: () => void }) {
   const formatTimestamp = (date: Date) => {
     return date.toLocaleString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
+      hour: 'numeric',
       minute: '2-digit'
     });
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col bg-white rounded-r-xl">
       {/* Email Header */}
-      <div className="p-6 border-b border-gray-200 bg-white">
-        <div className="flex items-start justify-between mb-4">
+      <div className="px-6 py-5 border-b border-gray-50 rounded-tr-xl">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">{email.subject}</h1>
-            <div className="flex items-center space-x-3 text-sm text-gray-600">
+            <div className="flex items-center justify-between mb-3">
+              <h1 className="text-lg font-medium text-gray-900 leading-relaxed">{email.subject}</h1>
+              <button 
+                onClick={onBack}
+                className="p-1.5 hover:bg-gray-50 rounded-md transition-colors"
+                title="Close email"
+              >
+                <X className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="flex items-center space-x-3 text-sm">
               <div className="flex items-center space-x-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={email.sender.avatar} />
-                  <AvatarFallback className="text-xs">
+                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                  <span className="text-xs font-medium text-gray-600">
                     {email.sender.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="font-medium">{email.sender.name}</span>
-                <span className="text-gray-500">&lt;{email.sender.email}&gt;</span>
+                  </span>
+                </div>
+                <span className="text-gray-900">{email.sender.name}</span>
+                <span className="text-gray-500">to me</span>
               </div>
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-gray-400 mt-2">
               {formatTimestamp(email.timestamp)}
             </div>
           </div>
           
           <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <Star className={`h-4 w-4 ${email.isStarred ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <Flag className={`h-4 w-4 ${email.isFlagged ? 'text-red-500' : 'text-gray-400'}`} />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+              <Star className={`h-4 w-4 ${email.isStarred ? 'text-gray-900 fill-current' : 'text-gray-400'}`} />
+            </button>
+            <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
               <Archive className="h-4 w-4 text-gray-400" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            </button>
+            <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
               <Trash2 className="h-4 w-4 text-gray-400" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            </button>
+            <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
               <MoreHorizontal className="h-4 w-4 text-gray-400" />
-            </Button>
+            </button>
           </div>
         </div>
-        
+
         {/* Action Buttons */}
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" className="text-gray-700">
-            <Reply className="h-4 w-4 mr-2" />
+          <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
             Reply
-          </Button>
-          <Button variant="outline" size="sm" className="text-gray-700">
-            <ReplyAll className="h-4 w-4 mr-2" />
-            Reply All
-          </Button>
-          <Button variant="outline" size="sm" className="text-gray-700">
-            <Forward className="h-4 w-4 mr-2" />
+          </button>
+          <button className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md text-sm transition-colors">
             Forward
-          </Button>
+          </button>
         </div>
       </div>
-      
+
       {/* Email Content */}
-      <div className="flex-1 overflow-y-auto p-6 bg-white">
-        <div className="prose prose-gray max-w-none">
-          <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="max-w-none">
+          <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-[15px]">
             {email.content}
           </div>
-        </div>
-        
-        {email.hasAttachment && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-2">
-              <Paperclip className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Attachments</span>
-            </div>
-            <div className="mt-2">
-              <div className="flex items-center justify-between p-2 bg-white rounded border">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                    <span className="text-xs font-semibold text-blue-700">PDF</span>
+
+          {email.hasAttachment && (
+            <div className="mt-8 p-4 bg-gray-25 rounded-lg border border-gray-100">
+              <div className="flex items-center space-x-2 mb-3">
+                <Paperclip className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">1 attachment</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-white rounded-md border border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                    <span className="text-xs font-medium text-gray-700">PDF</span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Q4_Strategy_Document.pdf</p>
+                    <p className="text-sm text-gray-900">Q4_Strategy_Document.pdf</p>
                     <p className="text-xs text-gray-500">2.4 MB</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm">
+                <button className="text-sm text-gray-700 hover:text-gray-900 transition-colors">
                   Download
-                </Button>
+                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -404,8 +380,9 @@ function EmailDetail({ email }: { email: EmailMessage }) {
 
 export default function Email() {
   const [activeFolder, setActiveFolder] = useState('1');
-  const [selectedEmail, setSelectedEmail] = useState<string | null>(mockEmails[0]?.id || null);
+  const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isClosing, setIsClosing] = useState(false);
 
   const currentFolder = mockFolders.find(f => f.id === activeFolder) || mockFolders[0];
   const currentEmail = mockEmails.find(e => e.id === selectedEmail);
@@ -416,65 +393,87 @@ export default function Email() {
     email.preview.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleCloseEmail = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setSelectedEmail(null);
+      setIsClosing(false);
+    }, 300);
+  };
+
+  // Show email detail if we have a selected email OR if we're in the middle of closing
+  const showEmailDetail = currentEmail || isClosing;
+  const emailToShow = currentEmail || (isClosing && mockEmails.find(e => e.id === selectedEmail));
+
   return (
-    <div className="flex h-full overflow-hidden bg-white">
+    <div className="flex h-full bg-white overflow-hidden rounded-xl">
       <EmailSidebar 
         folders={mockFolders}
-        activeFolder={activeFolder}
+        activeFolder={activeFolder} 
         onFolderSelect={setActiveFolder}
       />
       
-      {/* Email List */}
-      <div className="w-96 border-r border-gray-200 flex flex-col bg-white">
+      {/* Email List - adjusts width based on whether email is selected */}
+      <div className={`flex flex-col bg-white border-r border-gray-100 transition-all duration-300 ease-in-out ${
+        showEmailDetail && !isClosing ? 'w-96' : 'flex-1'
+      }`}>
         {/* List Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">{currentFolder.name}</h3>
-            <div className="flex items-center space-x-1">
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <SortAsc className="h-4 w-4 text-gray-500" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <Filter className="h-4 w-4 text-gray-500" />
-              </Button>
+        <div className="px-6 py-3 border-b border-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <h3 className="text-base font-semibold text-gray-900">{currentFolder.name}</h3>
+              <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+                <RefreshCw className="h-4 w-4 text-gray-400" />
+              </button>
             </div>
-          </div>
-          
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input 
-              placeholder="Search emails..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white border-gray-200 h-8 text-sm"
-            />
+            
+            <div className="flex items-center space-x-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input 
+                  placeholder="Search emails..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`pl-9 pr-3 py-2 bg-gray-50 border-0 rounded-md text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-200 transition-all ${
+                    currentEmail ? 'w-44' : 'w-64'
+                  }`}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+                  <SortAsc className="h-4 w-4 text-gray-400" />
+                </button>
+                <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+                  <Filter className="h-4 w-4 text-gray-400" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Email List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredEmails.map((email) => (
-            <EmailListItem
-              key={email.id}
-              email={email}
-              isSelected={selectedEmail === email.id}
-              onClick={() => setSelectedEmail(email.id)}
-            />
-          ))}
+          <div className="bg-white">
+            {filteredEmails.map((email) => (
+              <CompactEmailListItem
+                key={email.id}
+                email={email}
+                onClick={() => setSelectedEmail(email.id)}
+                isSelected={selectedEmail === email.id}
+              />
+            ))}
+          </div>
         </div>
       </div>
       
-      {/* Email Detail */}
-      {currentEmail ? (
-        <EmailDetail email={currentEmail} />
-      ) : (
-        <div className="flex-1 flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No email selected</h3>
-            <p className="text-gray-500">Choose an email from the list to view its contents</p>
-          </div>
+      {/* Email Detail - slides in from right */}
+      {showEmailDetail && (
+        <div className={`flex-[1.2] transition-all duration-300 ease-in-out ${
+          isClosing ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'
+        }`}>
+          <EmailDetail email={emailToShow} onBack={handleCloseEmail} />
         </div>
       )}
     </div>

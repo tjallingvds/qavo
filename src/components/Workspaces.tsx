@@ -272,127 +272,7 @@ const mockWorkspaces: Workspace[] = [
   }
 ];
 
-function WorkspacesSidebar({ 
-  viewMode,
-  onViewModeChange,
-  searchQuery,
-  onSearchChange
-}: { 
-  viewMode: 'grid' | 'timeline' | 'focus';
-  onViewModeChange: (mode: 'grid' | 'timeline' | 'focus') => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-}) {
-  return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Workspaces</h2>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-            <Settings className="h-4 w-4 text-gray-500" />
-          </Button>
-        </div>
-        
-        {/* New Workspace Button */}
-        <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          New Workspace
-        </Button>
-      </div>
-
-      {/* Search */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input 
-            placeholder="Search workspaces..." 
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 bg-white border-gray-200 h-8 text-sm"
-          />
-        </div>
-      </div>
-
-      {/* View Modes */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">View</div>
-        <div className="space-y-1">
-          <button 
-            onClick={() => onViewModeChange('grid')}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-              viewMode === 'grid' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <Grid3x3 className="h-4 w-4" />
-            <span>Grid</span>
-          </button>
-          
-          <button 
-            onClick={() => onViewModeChange('timeline')}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-              viewMode === 'timeline' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <History className="h-4 w-4" />
-            <span>Timeline</span>
-          </button>
-          
-          <button 
-            onClick={() => onViewModeChange('focus')}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-              viewMode === 'focus' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <Target className="h-4 w-4" />
-            <span>Focus</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Quick Filters */}
-      <div className="flex-1 overflow-y-auto p-3">
-        <div className="space-y-1">
-          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Filter</div>
-          
-          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200">
-            <div className="flex items-center space-x-3">
-              <Pin className="h-4 w-4 text-gray-500" />
-              <span>Pinned</span>
-            </div>
-            <span className="text-xs text-gray-500">1</span>
-          </button>
-          
-          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200">
-            <div className="flex items-center space-x-3">
-              <Activity className="h-4 w-4 text-gray-500" />
-              <span>Active</span>
-            </div>
-            <span className="text-xs text-gray-500">2</span>
-          </button>
-          
-          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200">
-            <div className="flex items-center space-x-3">
-              <Brain className="h-4 w-4 text-gray-500" />
-              <span>AI Insights</span>
-            </div>
-            <span className="text-xs text-gray-500">5</span>
-          </button>
-          
-          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200">
-            <div className="flex items-center space-x-3">
-              <Users className="h-4 w-4 text-gray-500" />
-              <span>Collaborative</span>
-            </div>
-            <span className="text-xs text-gray-500">2</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: () => void }) {
+function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: (workspaceId: string) => void }) {
   const formatTime = (date: Date) => {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
@@ -426,7 +306,7 @@ function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: 
 
   return (
     <div
-      onClick={onClick}
+      onClick={() => onClick(workspace.id)}
       className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 cursor-pointer hover:border-blue-200 group relative overflow-hidden"
     >
       {/* Header */}
@@ -571,102 +451,91 @@ function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: 
   );
 }
 
-export default function Workspaces() {
+export default function Workspaces({ onOpenWorkspace }: { onOpenWorkspace?: (workspaceId: string) => void }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'timeline' | 'focus'>('grid');
   
   const filteredWorkspaces = mockWorkspaces.filter(workspace => {
-    const matchesSearch = workspace.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         workspace.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (viewMode === 'focus') {
-      return matchesSearch && (workspace.isPinned || workspace.health === 'active');
-    }
-    
-    return matchesSearch;
+    return workspace.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           workspace.description.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const sortedWorkspaces = [...filteredWorkspaces].sort((a, b) => {
-    if (viewMode === 'timeline') {
-      return b.lastActivity.getTime() - a.lastActivity.getTime();
-    }
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
     return b.lastActivity.getTime() - a.lastActivity.getTime();
   });
 
   return (
-    <div className="flex h-full overflow-hidden bg-white">
-      <WorkspacesSidebar 
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-      
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Research Workspaces</h1>
-              <p className="text-gray-600 mt-1">
-                AI-augmented environments for deep work and collaboration
-              </p>
+    <div className="h-full bg-white overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Research Workspaces</h1>
+            <p className="text-gray-600 mt-1">
+              AI-augmented environments for deep work and collaboration
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Cpu className="h-4 w-4" />
+              <span>5 AI insights waiting</span>
             </div>
-            
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Cpu className="h-4 w-4" />
-                <span>5 AI insights waiting</span>
-              </div>
-              <Button variant="outline" size="sm">
-                <Workflow className="h-4 w-4 mr-2" />
-                Templates
-              </Button>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Workspace
-              </Button>
-            </div>
+            <Button variant="outline" size="sm">
+              <Workflow className="h-4 w-4 mr-2" />
+              Templates
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Workspace
+            </Button>
           </div>
         </div>
         
-        {/* Workspaces Grid */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {sortedWorkspaces.length > 0 ? (
-            <div className={
-              viewMode === 'grid' 
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
-                : 'space-y-4 max-w-4xl'
-            }>
-              {sortedWorkspaces.map((workspace) => (
-                <WorkspaceCard
-                  key={workspace.id}
-                  workspace={workspace}
-                  onClick={() => console.log('Open workspace:', workspace.id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No workspaces found</h3>
-                <p className="text-gray-500 mb-4">
-                  {searchQuery ? 'Try adjusting your search terms' : 'Create your first intelligent workspace'}
-                </p>
-                {!searchQuery && (
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Workspace
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
+        {/* Search */}
+        <div className="mt-4 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input 
+              placeholder="Search workspaces..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-white border-gray-200 h-9 text-sm"
+            />
+          </div>
         </div>
+      </div>
+      
+      {/* Workspaces Grid */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {sortedWorkspaces.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedWorkspaces.map((workspace) => (
+              <WorkspaceCard
+                key={workspace.id}
+                workspace={workspace}
+                onClick={(workspaceId) => onOpenWorkspace?.(workspaceId)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No workspaces found</h3>
+              <p className="text-gray-500 mb-4">
+                {searchQuery ? 'Try adjusting your search terms' : 'Create your first intelligent workspace'}
+              </p>
+              {!searchQuery && (
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Workspace
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
