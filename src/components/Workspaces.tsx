@@ -290,11 +290,11 @@ function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: 
 
   const getHealthColor = (health: string) => {
     switch (health) {
-      case 'active': return 'text-green-600 bg-green-50';
-      case 'idle': return 'text-yellow-600 bg-yellow-50';
-      case 'messy': return 'text-orange-600 bg-orange-50';
-      case 'archived': return 'text-gray-600 bg-gray-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'active': return 'text-green-600 bg-green-50 border-green-100';
+      case 'idle': return 'text-yellow-600 bg-yellow-50 border-yellow-100';
+      case 'messy': return 'text-orange-600 bg-orange-50 border-orange-100';
+      case 'archived': return 'text-gray-600 bg-gray-50 border-gray-100';
+      default: return 'text-gray-600 bg-gray-50 border-gray-100';
     }
   };
 
@@ -304,72 +304,78 @@ function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: 
 
   const mostActiveResearchPage = workspace.researchPages.find(page => page.isActive) || workspace.researchPages[0];
 
+  // Mock deadline - in real app this would come from workspace data
+  const deadline = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days from now
+  const formatDeadline = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   return (
     <div
       onClick={() => onClick(workspace.id)}
-      className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 cursor-pointer hover:border-blue-200 group relative overflow-hidden"
+      className="bg-white border border-gray-100 rounded-lg p-4 hover:bg-gray-25/50 transition-all duration-200 cursor-pointer group"
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <div className="text-2xl">{workspace.emoji}</div>
+          <div className="text-xl">{workspace.emoji}</div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+              <h3 className="font-medium text-gray-900 text-sm">
                 {workspace.name}
               </h3>
-              {workspace.isPinned && <Pin className="h-3 w-3 text-yellow-500" />}
+              {workspace.isPinned && <Pin className="h-3 w-3 text-gray-400" />}
             </div>
-            <p className="text-sm text-gray-600 line-clamp-1">{workspace.description}</p>
+            <p className="text-xs text-gray-600 line-clamp-1">{workspace.description}</p>
           </div>
         </div>
         
         <div className="flex items-center space-x-2">
-          <Badge className={`text-xs ${getHealthColor(workspace.health)}`}>
+          <span className={`text-xs px-2 py-1 rounded-full border ${getHealthColor(workspace.health)}`}>
             {workspace.health}
-          </Badge>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-            <MoreHorizontal className="h-4 w-4 text-gray-400" />
-          </Button>
+          </span>
+          <button className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 rounded-md">
+            <MoreHorizontal className="h-3 w-3 text-gray-400" />
+          </button>
         </div>
       </div>
 
-      {/* AI Insight */}
+      {/* Progress Summary */}
       {getPriorityInsight() && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+        <div className="mb-3 p-3 bg-gray-50 rounded-md border border-gray-100">
           <div className="flex items-start space-x-2">
-            <Sparkles className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="h-4 w-4 bg-gray-100 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs">📊</span>
+            </div>
             <div>
-              <p className="text-sm text-blue-800 font-medium mb-1">AI Insight</p>
-              <p className="text-sm text-blue-700">{getPriorityInsight()?.content}</p>
+              <p className="text-xs font-medium text-gray-700 mb-1">Progress Summary</p>
+              <p className="text-xs text-gray-600 leading-relaxed">{getPriorityInsight()?.content}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Most Active Research Page */}
+      {/* Latest Pages */}
       {mostActiveResearchPage && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg border">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <ExternalLink className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-900">Latest Research Page</span>
-              {mostActiveResearchPage.isActive && (
-                <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-              )}
-            </div>
+        <div className="mb-3 p-3 bg-gray-25 rounded-md">
+          <div className="flex items-center space-x-2 mb-2">
+            <ExternalLink className="h-3 w-3 text-gray-500" />
+            <span className="text-xs font-medium text-gray-700">Latest Pages</span>
+            {mostActiveResearchPage.isActive && (
+              <div className="h-1.5 w-1.5 bg-green-400 rounded-full"></div>
+            )}
           </div>
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-800 line-clamp-1">
+          <div className="space-y-1">
+            <h4 className="text-xs font-medium text-gray-800 line-clamp-1">
               {mostActiveResearchPage.title}
             </h4>
-            <p className="text-xs text-gray-600 line-clamp-2">
+            <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
               {mostActiveResearchPage.aiSummary}
             </p>
             <div className="flex items-center space-x-3 text-xs text-gray-500">
               <span className="flex items-center space-x-1">
                 <StickyNote className="h-3 w-3" />
-                <span>{mostActiveResearchPage.noteCount} notes</span>
+                <span>{mostActiveResearchPage.noteCount}</span>
               </span>
               <span>{formatTime(mostActiveResearchPage.lastVisited)}</span>
             </div>
@@ -378,34 +384,33 @@ function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: 
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-3 gap-3 mb-3">
         <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900">{workspace.researchPages.length}</div>
+          <div className="text-sm font-medium text-gray-900">{workspace.researchPages.length}</div>
           <div className="text-xs text-gray-500">Pages</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900">{workspace.totalNotes}</div>
-          <div className="text-xs text-gray-500">Notes</div>
+          <div className="text-sm font-medium text-gray-900">{workspace.members.length}</div>
+          <div className="text-xs text-gray-500">Collaborators</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900">{workspace.weeklyActivity}%</div>
-          <div className="text-xs text-gray-500">Activity</div>
+          <div className="text-sm font-medium text-gray-900">{formatDeadline(deadline)}</div>
+          <div className="text-xs text-gray-500">Deadline</div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-2 border-t border-gray-50">
         <div className="flex items-center space-x-2">
-          <div className="flex -space-x-2">
+          <div className="flex -space-x-1">
             {workspace.members.slice(0, 3).map((member) => (
               <div key={member.id} className="relative">
-                <Avatar className="h-6 w-6 border-2 border-white">
-                  <AvatarImage src={member.avatar} />
-                  <AvatarFallback className="text-xs bg-gray-200">
+                <div className="h-5 w-5 rounded-full bg-gray-100 border border-white flex items-center justify-center">
+                  <span className="text-xs font-medium text-gray-600">
                     {member.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-white ${
+                  </span>
+                </div>
+                <div className={`absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full border border-white ${
                   member.status === 'online' ? 'bg-green-400' :
                   member.status === 'away' ? 'bg-yellow-400' :
                   member.status === 'busy' ? 'bg-red-400' : 'bg-gray-400'
@@ -413,38 +418,21 @@ function WorkspaceCard({ workspace, onClick }: { workspace: Workspace; onClick: 
               </div>
             ))}
             {workspace.members.length > 3 && (
-              <div className="h-6 w-6 bg-gray-100 border-2 border-white rounded-full flex items-center justify-center">
-                <span className="text-xs text-gray-600">+{workspace.members.length - 3}</span>
+              <div className="h-5 w-5 bg-gray-50 border border-white rounded-full flex items-center justify-center">
+                <span className="text-xs text-gray-500">+{workspace.members.length - 3}</span>
               </div>
             )}
           </div>
-          <span className="text-xs text-gray-500">Updated {formatTime(workspace.lastActivity)}</span>
+          <span className="text-xs text-gray-500">{formatTime(workspace.lastActivity)}</span>
         </div>
         
-        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
-      </div>
-
-      {/* Quick Actions Overlay */}
-      <div className="absolute inset-x-0 bottom-0 bg-white border-t border-gray-100 p-3 transform translate-y-full group-hover:translate-y-0 transition-transform duration-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-              <Eye className="h-3 w-3 mr-1" />
-              Peek
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-              <Plus className="h-3 w-3 mr-1" />
-              New Page
-            </Button>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-              <Share2 className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-              <Brain className="h-3 w-3" />
-            </Button>
-          </div>
+        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button className="p-1.5 hover:bg-gray-50 rounded-md transition-colors">
+            <Eye className="h-3 w-3 text-gray-400" />
+          </button>
+          <button className="p-1.5 hover:bg-gray-50 rounded-md transition-colors">
+            <Share2 className="h-3 w-3 text-gray-400" />
+          </button>
         </div>
       </div>
     </div>
@@ -466,76 +454,77 @@ export default function Workspaces({ onOpenWorkspace }: { onOpenWorkspace?: (wor
   });
 
   return (
-    <div className="h-full bg-white overflow-hidden">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Research Workspaces</h1>
-            <p className="text-gray-600 mt-1">
-              AI-augmented environments for deep work and collaboration
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Cpu className="h-4 w-4" />
-              <span>5 AI insights waiting</span>
+    <div className="flex h-full bg-white overflow-hidden rounded-xl">
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-gray-50 bg-white rounded-t-xl">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-lg font-medium text-gray-900">Workspaces</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                AI-augmented environments for deep work and collaboration
+              </p>
             </div>
-            <Button variant="outline" size="sm">
-              <Workflow className="h-4 w-4 mr-2" />
-              Templates
-            </Button>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Workspace
-            </Button>
+            
+            <div className="flex items-center space-x-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input 
+                  placeholder="Search workspaces..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64 pl-9 pr-3 py-2 bg-gray-50 border-0 rounded-md text-sm placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-200 transition-all"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+                  <Filter className="h-4 w-4 text-gray-400" />
+                </button>
+                <button className="p-2 hover:bg-gray-50 rounded-md transition-colors">
+                  <Grid3x3 className="h-4 w-4 text-gray-400" />
+                </button>
+              </div>
+
+              <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                <Plus className="h-4 w-4 mr-2 inline" />
+                New Workspace
+              </button>
+            </div>
           </div>
         </div>
         
-        {/* Search */}
-        <div className="mt-4 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input 
-              placeholder="Search workspaces..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white border-gray-200 h-9 text-sm"
-            />
-          </div>
-        </div>
-      </div>
-      
-      {/* Workspaces Grid */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {sortedWorkspaces.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedWorkspaces.map((workspace) => (
-              <WorkspaceCard
-                key={workspace.id}
-                workspace={workspace}
-                onClick={(workspaceId) => onOpenWorkspace?.(workspaceId)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No workspaces found</h3>
-              <p className="text-gray-500 mb-4">
-                {searchQuery ? 'Try adjusting your search terms' : 'Create your first intelligent workspace'}
-              </p>
-              {!searchQuery && (
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Workspace
-                </Button>
-              )}
+        {/* Workspaces Grid */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white">
+          {sortedWorkspaces.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedWorkspaces.map((workspace) => (
+                <WorkspaceCard
+                  key={workspace.id}
+                  workspace={workspace}
+                  onClick={(workspaceId) => onOpenWorkspace?.(workspaceId)}
+                />
+              ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No workspaces found</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  {searchQuery ? 'Try adjusting your search terms' : 'Create your first intelligent workspace'}
+                </p>
+                {!searchQuery && (
+                  <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    <Plus className="h-4 w-4 mr-2 inline" />
+                    Create Workspace
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
