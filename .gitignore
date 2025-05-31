@@ -31,3 +31,10 @@ yarn.lock
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Environment and configuration files with sensitive data
+.env
+.env.local
+.env.production
+.env.development
+backend/config.js

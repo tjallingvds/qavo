@@ -34,6 +34,74 @@ npm install
 npm run dev
 ```
 
+## ⚙️ OAuth Configuration (Required)
+
+This application includes email and chat features that require OAuth credentials. To use these features, you need to create a configuration file:
+
+1. **Create `backend/config.js`** with your OAuth credentials:
+
+```javascript
+// Backend Configuration - Alternative to .env file
+export const config = {
+  // Server Configuration
+  PORT: process.env.PORT || 3001,
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+
+  // Slack OAuth Configuration
+  SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID || 'your-slack-client-id',
+  SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET || 'your-slack-client-secret',
+  SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET || 'your-slack-signing-secret',
+  SLACK_VERIFICATION_TOKEN: process.env.SLACK_VERIFICATION_TOKEN || 'your-slack-verification-token',
+  SLACK_REDIRECT_URI: process.env.SLACK_REDIRECT_URI || 'http://localhost:3001/api/auth/slack/callback',
+
+  // Google OAuth Configuration  
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || 'your-google-client-id',
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || 'your-google-client-secret',
+  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/gmail/callback',
+
+  // JWT Configuration
+  JWT_SECRET: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
+
+  // Rate Limiting
+  RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
+  RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+
+  // Logging
+  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+  LOG_FILE_PATH: process.env.LOG_FILE_PATH || './logs/app.log'
+};
+
+// Set environment variables from config (fallback)
+Object.keys(config).forEach(key => {
+  if (!process.env[key]) {
+    process.env[key] = config[key].toString();
+  }
+});
+
+export default config; 
+```
+
+2. **Replace the placeholder values** with your actual OAuth credentials:
+   - **Google OAuth**: Create credentials at [Google Cloud Console](https://console.cloud.google.com/)
+   - **Slack OAuth**: Create a Slack app at [Slack API](https://api.slack.com/apps)
+
+3. **Important**: The `backend/config.js` file is gitignored to protect your credentials. Never commit this file with real credentials.
+
+4. **Start the backend server**:
+```sh
+cd backend
+npm install
+npm start
+```
+
+5. **Start the frontend**:
+```sh
+# In the root directory
+npm run dev
+```
+
 ## 🐞 Debug
 
 ![electron-vite-react-debug.gif](/electron-vite-react-debug.gif)
